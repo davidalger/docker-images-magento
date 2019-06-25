@@ -1,7 +1,7 @@
 FROM davidalger/php:7.2-fpm-alpine
 
 ARG COMPOSER_AUTH
-ENV MAGENTO_VERSION     2.3.1
+ARG MAGENTO_VERSION
 
 RUN composer global require hirak/prestissimo \
     && composer create-project --no-interaction --repository=https://repo.magento.com/ \
