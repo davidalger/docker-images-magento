@@ -13,12 +13,18 @@ readonly BASE_DIR="$(
   && pwd
 )/.."
 
-## support passing a single argument to the command to be more specific on what is built
-SEARCH_PATH="${1:-*}"
+## if --push is passed as first argument to script, this will login to docker hub and push images
+PUSH_FLAG=
+if [[ "${1:-}" = "--push" ]]; then
+  PUSH_FLAG=1
+  SEARCH_PATH="${2:-*}"
+else
+  SEARCH_PATH="${1:-*}"
+fi
 
 ## change into base directory and login to docker hub if neccessary
 pushd ${BASE_DIR} >/dev/null
-docker login
+[[ $PUSH_FLAG ]] && docker login
 
 CURRENT_VERSION="2.3.2"   # used to generate 2.3 tag
 BUILD_VERSIONS="2.3.0 2.3.1 2.3.2"
@@ -35,16 +41,17 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
     fi
 
     if [[ ${CURRENT_VERSION} = ${MAGENTO_VERSION} ]]; then
-      IMAGE_TAGS+=\ -t\ "davidalger/magento:$(dirname "${file}" | tr / -)"
+      IMAGE_TAGS+=\ -t\ "davidalger/magento:$(dirname "${file}" | tr / - | sed 's/--/-/')"
     fi
 
     export COMPOSER_AUTH MAGENTO_VERSION
-    docker build ${IMAGE_TAGS} ${BUILD_DIR} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION
+    docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION \
+       -f ${BUILD_DIR}/Dockerfile "$(echo ${BUILD_DIR} | cut -d/ -f1)"
     for tag in ${IMAGE_TAGS}; do
       if [[ ${tag} = "-t" ]]; then
         continue
       fi
-      docker push ${tag}
+      [[ $PUSH_FLAG ]] && docker push "${tag}"
     done
   done
 done
