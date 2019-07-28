@@ -1,15 +1,13 @@
-FROM davidalger/php:7.2-fpm
+FROM davidalger/warden:mage2-fpm-7.2
 
 ARG COMPOSER_AUTH
 ARG MAGENTO_VERSION
 
-RUN composer global require hirak/prestissimo \
+RUN rmdir /var/www/html/pub \
+    && composer global require hirak/prestissimo \
     && composer create-project --no-interaction --repository=https://repo.magento.com/ \
-        magento/project-community-edition ./ ${MAGENTO_VERSION} \
+        magento/project-community-edition /var/www/html ${MAGENTO_VERSION} \
     && rm -rf "$(composer config -g home)"
-
-COPY etc/profile.d/*.sh /etc/profile.d/
-COPY etc/php.d/*.ini /etc/php.d/
 
 RUN bin/magento sampledata:deploy && rm -rf var/composer_home
 
