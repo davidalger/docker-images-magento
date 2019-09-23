@@ -26,8 +26,9 @@ fi
 pushd ${BASE_DIR} >/dev/null
 [[ $PUSH_FLAG ]] && docker login
 
-CURRENT_VERSION="2.3.2"   # used to generate 2.3 tag
-BUILD_VERSIONS="2.3.0 2.3.1 2.3.2"
+## space separated list of versions to build
+BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.2 2.3.1 2.3.0}"
+LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $1}')"
 
 ## iterate over and build each Dockerfile
 for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
@@ -40,7 +41,7 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
       IMAGE_TAGS+=-$(basename $(dirname "${file}"))
     fi
 
-    if [[ ${CURRENT_VERSION} = ${MAGENTO_VERSION} ]]; then
+    if [[ ${LATEST_VERSION} = ${MAGENTO_VERSION} ]]; then
       IMAGE_TAGS+=\ -t\ "davidalger/magento:$(dirname "${file}" | tr / - | sed 's/--/-/')"
     fi
 
