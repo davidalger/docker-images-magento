@@ -18,9 +18,6 @@ pushd ${BASE_DIR} >/dev/null
 PUSH_FLAG=
 if [[ "${1:-}" = "--push" ]]; then
   PUSH_FLAG=1
-  SEARCH_PATH="${2:-*}"
-else
-  SEARCH_PATH="${1:-*}"
 fi
 
 ## login to docker hub as needed
@@ -33,10 +30,13 @@ fi
 BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.2 2.3.1 2.3.0}"
 LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $1}')"
 
+## build images using dockerfiles for major version specified
+SEARCH_PATH="$(echo ${LATEST_VERSION} | cut -d. -f1-2)"
+
 ## iterate over and build each Dockerfile
 for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
   BUILD_DIR="$(dirname "${file}")"
-  COMPOSER_AUTH="$(cat "$(composer config -g home)/auth.json")"
+  COMPOSER_AUTH="${COMPOSER_AUTH:-"$(cat "$(composer config -g home)/auth.json")"}"
 
   for MAGENTO_VERSION in ${BUILD_VERSIONS}; do
     IMAGE_TAGS=-t\ "davidalger/magento:${MAGENTO_VERSION}"
