@@ -27,7 +27,7 @@ if [[ $PUSH_FLAG ]]; then
 fi
 
 ## space separated list of versions to build
-BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.3 2.3.2 2.3.1 2.3.0}"
+BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.x}"
 LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $1}')"
 MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
 
@@ -40,9 +40,14 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
   COMPOSER_AUTH="${COMPOSER_AUTH:-"$(cat "$(composer config -g home)/auth.json")"}"
 
   for MAGENTO_VERSION in ${BUILD_VERSIONS}; do
-    IMAGE_TAGS=-t\ "davidalger/magento:${MAGENTO_VERSION}"
-    if [[ ! ${MAGENTO_VERSION} =~ ^$(basename $(dirname "${file}")) ]]; then
-      IMAGE_TAGS+=-$(basename $(dirname "${file}"))
+    IMAGE_TAGS=
+
+    if [[ ! ${MAGENTO_VERSION} =~ x$ ]]; then
+      IMAGE_TAGS+=-t\ "davidalger/magento:${MAGENTO_VERSION}"
+
+      if [[ ! ${MAGENTO_VERSION} =~ ^$(basename $(dirname "${file}")) ]]; then
+        IMAGE_TAGS+=-$(basename $(dirname "${file}"))
+      fi
     fi
 
     if [[ ${LATEST_VERSION} = ${MAGENTO_VERSION} ]]; then
