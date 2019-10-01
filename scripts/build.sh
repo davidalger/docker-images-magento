@@ -23,7 +23,7 @@ fi
 ## login to docker hub as needed
 if [[ $PUSH_FLAG ]]; then
   [ -t 1 ] && docker login \
-    || echo "${DOCKER_PASSWORD:-}" | docker login -u "${DOCKER_USERNAME:-}" --password-stdin
+    || echo "${DOCKER_PASSWORD:-}" | docker login -u "${DOCKER_USERNAME:-}" --password-stdin ${DOCKER_REGISTRY:-}
 fi
 
 ## space separated list of versions to build
@@ -37,13 +37,14 @@ SEARCH_PATH="$(echo ${LATEST_VERSION} | cut -d. -f1-2)"
 ## iterate over and build each Dockerfile
 for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
   BUILD_DIR="$(dirname "${file}")"
+  IMAGE_NAME="${IMAGE_NAME:-davidalger/magento}"
   COMPOSER_AUTH="${COMPOSER_AUTH:-"$(cat "$(composer config -g home)/auth.json")"}"
 
   for MAGENTO_VERSION in ${BUILD_VERSIONS}; do
     IMAGE_TAGS=
 
     if [[ ! ${MAGENTO_VERSION} =~ x$ ]]; then
-      IMAGE_TAGS+=-t\ "davidalger/magento:${MAGENTO_VERSION}"
+      IMAGE_TAGS+=-t\ "${IMAGE_NAME}:${MAGENTO_VERSION}"
 
       if [[ ! ${MAGENTO_VERSION} =~ ^$(basename $(dirname "${file}")) ]]; then
         IMAGE_TAGS+=-$(basename $(dirname "${file}"))
@@ -51,7 +52,7 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
     fi
 
     if [[ ${LATEST_VERSION} = ${MAGENTO_VERSION} ]]; then
-      IMAGE_TAGS+=\ -t\ "davidalger/magento:$(dirname "${file}" | tr / - | sed 's/--/-/')"
+      IMAGE_TAGS+=\ -t\ "${IMAGE_NAME}:$(dirname "${file}" | tr / - | sed 's/--/-/')"
     fi
 
     export COMPOSER_AUTH MAGENTO_VERSION MAGENTO_EDITION
