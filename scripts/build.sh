@@ -54,7 +54,7 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
       IMAGE_TAGS+=\ -t\ "davidalger/magento:$(dirname "${file}" | tr / - | sed 's/--/-/')"
     fi
 
-    export COMPOSER_AUTH MAGENTO_VERSION
+    export COMPOSER_AUTH MAGENTO_VERSION MAGENTO_EDITION
     docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
        -f ${BUILD_DIR}/Dockerfile "$(echo ${BUILD_DIR} | cut -d/ -f1)"
     for tag in ${IMAGE_TAGS}; do
