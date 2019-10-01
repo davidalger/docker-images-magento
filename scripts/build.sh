@@ -27,8 +27,9 @@ if [[ $PUSH_FLAG ]]; then
 fi
 
 ## space separated list of versions to build
-BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.2 2.3.1 2.3.0}"
+BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.3 2.3.2 2.3.1 2.3.0}"
 LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $1}')"
+MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
 
 ## build images using dockerfiles for major version specified
 SEARCH_PATH="$(echo ${LATEST_VERSION} | cut -d. -f1-2)"
