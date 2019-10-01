@@ -50,7 +50,7 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
     fi
 
     export COMPOSER_AUTH MAGENTO_VERSION
-    docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION \
+    docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
        -f ${BUILD_DIR}/Dockerfile "$(echo ${BUILD_DIR} | cut -d/ -f1)"
     for tag in ${IMAGE_TAGS}; do
       if [[ ${tag} = "-t" ]]; then
