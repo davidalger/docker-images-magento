@@ -35,7 +35,7 @@ MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
 SEARCH_PATH="$(echo ${LATEST_VERSION} | cut -d. -f1-2)"
 
 ## iterate over and build each Dockerfile
-for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
+for file in $(find ${SEARCH_PATH} -type f -name Dockerfile | sort -n); do
   BUILD_DIR="$(dirname "${file}")"
   IMAGE_NAME="${IMAGE_NAME:-davidalger/magento}"
   COMPOSER_AUTH="${COMPOSER_AUTH:-"$(cat "$(composer config -g home)/auth.json")"}"
@@ -56,6 +56,7 @@ for file in $(find ${SEARCH_PATH} -type f -name Dockerfile); do
     fi
 
     export COMPOSER_AUTH MAGENTO_VERSION MAGENTO_EDITION
+    printf "\e[01;31m==> building ${IMAGE_TAGS}\033[0m\n"
     docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
        -f ${BUILD_DIR}/Dockerfile "$(echo ${BUILD_DIR} | cut -d/ -f1)"
     for tag in ${IMAGE_TAGS}; do
