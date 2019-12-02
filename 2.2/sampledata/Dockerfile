@@ -12,5 +12,7 @@ RUN rmdir /var/www/html/pub \
 
 RUN bin/magento sampledata:deploy && rm -rf var/composer_home
 
+COPY --chown=www-data:www-data config.php app/etc/config.php
 RUN bin/magento module:enable --all \
-    && bin/magento setup:di:compile
+    && bin/magento setup:di:compile \
+    && bin/magento setup:static-content:deploy -f -j $(nproc)

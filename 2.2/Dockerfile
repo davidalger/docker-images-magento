@@ -10,5 +10,7 @@ RUN rmdir /var/www/html/pub \
         magento/project-${MAGENTO_EDITION}-edition /var/www/html ${MAGENTO_VERSION} \
     && rm -rf "$(composer config -g home)"
 
+COPY --chown=www-data:www-data config.php app/etc/config.php
 RUN bin/magento module:enable --all \
-    && bin/magento setup:di:compile
+    && bin/magento setup:di:compile \
+    && bin/magento setup:static-content:deploy -f -j $(nproc)
