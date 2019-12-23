@@ -19,4 +19,5 @@ RUN bin/magento module:enable --all \
     && bin/magento setup:static-content:deploy -f -j $(nproc)
 
 FROM davidalger/php:${PHP_VERSION}-fpm
+COPY php.d/*.ini /etc/php.d/
 COPY --from=build --chown=php-fpm:php-fpm /var/www/html /var/www/html
