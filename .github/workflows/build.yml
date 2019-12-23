@@ -1,5 +1,7 @@
 name: Docker Image CI
 on:
+  schedule:
+  - cron: "0 6 * * 1"   # 6 AM UTC on Monday
   push:
     branches:
     - master
@@ -14,6 +16,8 @@ jobs:
         MAJOR_VERSION:
           - "2.2"
           - "2.3"
+        MAGENTO_EDITION:
+          - "community"
         include:
           - MAJOR_VERSION: "2.2"
             BUILD_VERSIONS: "2.2.x"
