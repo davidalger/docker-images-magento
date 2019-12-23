@@ -13,9 +13,10 @@ RUN composer global require hirak/prestissimo \
         magento/project-${MAGENTO_EDITION}-edition /var/www/html ${MAGENTO_VERSION}
 
 WORKDIR /var/www/html
-RUN ln -s /root/.composer var/composer_home \
+RUN mkdir -p var/composer_home \
+    && ln -s /root/.composer/cache var/composer_home/cache \
     && bin/magento sampledata:deploy \
-    && rm -f var/composer_home
+    && rm -rf var/composer_home
 
 COPY config.php app/etc/config.php
 RUN bin/magento module:enable --all \
