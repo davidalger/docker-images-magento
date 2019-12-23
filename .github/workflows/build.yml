@@ -5,6 +5,7 @@ on:
   push:
     branches:
     - master
+  pull_request:
 
 jobs:
   build:
@@ -33,7 +34,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - run: ./scripts/build.sh --push
+    - name: build
+      run: |
+        set -x
+        if [ "{{ github.event }}" == "push" ]; then
+          ./scripts/build.sh --push
+        else
+          ./scripts/build.sh
+        fi
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         BUILD_VERSIONS: ${{ matrix.BUILD_VERSIONS }}
