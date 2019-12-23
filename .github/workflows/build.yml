@@ -9,6 +9,7 @@ jobs:
     name: Magento ${{ matrix.MAJOR_VERSION }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         MAJOR_VERSION:
           - "2.2"
@@ -28,5 +29,6 @@ jobs:
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         BUILD_VERSIONS: ${{ matrix.BUILD_VERSIONS }}
+        PHP_VERSION: ${{ matrix.PHP_VERSION }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
