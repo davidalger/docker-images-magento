@@ -5,11 +5,22 @@ on:
   push:
     branches:
     - master
+  pull_request:
 
 jobs:
   build:
     name: Magento ${{ matrix.MAJOR_VERSION }} (${{ matrix.MAGENTO_EDITION }})
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.3
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: true
+          MYSQL_DATABASE: magento
+          MYSQL_USER: magento
+          MYSQL_PASSWORD: magento
+        options: "--name mariadb"
+
     strategy:
       fail-fast: false
       matrix:
@@ -33,7 +44,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - run: ./scripts/build.sh --push
+
+    - name: Build artifact
+      run: |
+        if [ "{{ github.event }}" == "push" ];
+          then ./scripts/build.sh --push
+          else ./scripts/build.sh
+        fi
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         BUILD_VERSIONS: ${{ matrix.BUILD_VERSIONS }}
@@ -43,3 +60,20 @@ jobs:
         DOCKER_REGISTRY: docker.io
         MAGENTO_EDITION: ${{ matrix.MAGENTO_EDITION }}
         IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
+
+    - name: Build database
+      run: |
+        for suffix in "" "-sampledata"; do
+          docker run --rm --network "$(docker network ls --filter 'name=github' --format '{{ .Name }}')" \
+            -w /var/www/html docker.io/davidalger/magento:${{ matrix.major_version }}${suffix} \
+            php bin/magento setup:install \
+              --cleanup-database --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento
+
+          docker stop mariadb
+          docker commit mariadb docker.io/davidalger/magento:${{ matrix.major_version }}-mariadb${suffix}
+          docker start mariadb && sleep 10
+
+          if [ "{{ github.event }}" == "push" ]; then
+            docker image push docker.io/davidalger/magento:${{ matrix.major_version }}-mariadb${suffix}
+          fi
+        done
