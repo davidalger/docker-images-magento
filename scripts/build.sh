@@ -63,8 +63,12 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
         -f "${Dockerfile}" "${BASE_DIR}/context"
 
     for tag in "${IMAGE_TAGS[@]}"; do
-      [[ "${tag}" = "-t" ]] && continue
-      [[ ${PUSH_FLAG} ]] && docker push "${tag}"
+      if [[ "${tag}" = "-t" ]]; then
+        continue
+      fi
+      if [[ ${PUSH_FLAG} ]]; then
+        docker push "${tag}"
+      fi
     done
   done
 done
