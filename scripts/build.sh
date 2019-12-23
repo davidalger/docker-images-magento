@@ -21,49 +21,50 @@ if [[ "${1:-}" = "--push" ]]; then
 fi
 
 ## login to docker hub as needed
-if [[ $PUSH_FLAG ]]; then
+if [[ ${PUSH_FLAG} ]]; then
   [ -t 1 ] && docker login \
     || echo "${DOCKER_PASSWORD:-}" | docker login -u "${DOCKER_USERNAME:-}" --password-stdin ${DOCKER_REGISTRY:-}
 fi
 
 ## space separated list of versions to build
+PHP_VERSION="${PHP_VERSION:-7.2}"
 BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.x}"
-LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $1}')"
+LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $NF}')"
 MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
 
-## build images using dockerfiles for major version specified
-SEARCH_PATH="$(echo ${LATEST_VERSION} | cut -d. -f1-2)"
-
 ## iterate over and build each Dockerfile
-for file in $(find ${SEARCH_PATH} -type f -name Dockerfile | sort -n); do
-  BUILD_DIR="$(dirname "${file}")"
+for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
   IMAGE_NAME="${IMAGE_NAME:-davidalger/magento}"
   COMPOSER_AUTH="${COMPOSER_AUTH:-"$(cat "$(composer config -g home)/auth.json")"}"
 
   for MAGENTO_VERSION in ${BUILD_VERSIONS}; do
-    IMAGE_TAGS=
+    IMAGE_TAGS=()
+
+    IMAGE_SUFFIX="$(basename $(dirname "${Dockerfile}") | tr / - | sed 's/--/-/')"
+    if [[ ${IMAGE_SUFFIX} = "." ]]; then
+      IMAGE_SUFFIX=
+    else
+      IMAGE_SUFFIX="-${IMAGE_SUFFIX}"
+    fi
 
     if [[ ! ${MAGENTO_VERSION} =~ x$ ]]; then
-      IMAGE_TAGS+=-t\ "${IMAGE_NAME}:${MAGENTO_VERSION}"
-
-      if [[ ! ${MAGENTO_VERSION} =~ ^$(basename $(dirname "${file}")) ]]; then
-        IMAGE_TAGS+=-$(basename $(dirname "${file}"))
-      fi
+      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:${MAGENTO_VERSION}${IMAGE_SUFFIX}")
     fi
 
     if [[ ${LATEST_VERSION} = ${MAGENTO_VERSION} ]]; then
-      IMAGE_TAGS+=\ -t\ "${IMAGE_NAME}:$(dirname "${file}" | tr / - | sed 's/--/-/')"
+      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:$(echo ${MAGENTO_VERSION} | cut -d. -f1-2)${IMAGE_SUFFIX}")
     fi
 
-    export COMPOSER_AUTH MAGENTO_VERSION MAGENTO_EDITION
-    printf "\e[01;31m==> building ${IMAGE_TAGS}\033[0m\n"
-    docker build ${IMAGE_TAGS} --build-arg COMPOSER_AUTH --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
-       -f ${BUILD_DIR}/Dockerfile "$(echo ${BUILD_DIR} | cut -d/ -f1)"
-    for tag in ${IMAGE_TAGS}; do
-      if [[ ${tag} = "-t" ]]; then
-        continue
-      fi
-      [[ $PUSH_FLAG ]] && docker push "${tag}"
+    export COMPOSER_AUTH PHP_VERSION MAGENTO_VERSION MAGENTO_EDITION
+    printf "\e[01;31m==> building ${IMAGE_TAGS[*]}\033[0m\n"
+    docker build "${IMAGE_TAGS[@]}" \
+        --build-arg COMPOSER_AUTH --build-arg PHP_VERSION \
+        --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
+        -f "${Dockerfile}" "${BASE_DIR}/context"
+
+    for tag in "${IMAGE_TAGS[@]}"; do
+      [[ "${tag}" = "-t" ]] && continue
+      [[ ${PUSH_FLAG} ]] && docker push "${tag}"
     done
   done
 done

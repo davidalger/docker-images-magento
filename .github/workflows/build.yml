@@ -15,10 +15,12 @@ jobs:
           - "2.3"
         include:
           - MAJOR_VERSION: "2.2"
-            BUILD_VERSIONS: "2.2.10 2.2.9 2.2.8"
+            BUILD_VERSIONS: "2.2.8 2.2.9 2.2.10"
+            PHP_VERSION: "7.1"
 
           - MAJOR_VERSION: "2.3"
-            BUILD_VERSIONS: "2.3.3 2.3.2 2.3.1 2.3.0"
+            BUILD_VERSIONS: "2.3.0 2.3.1 2.3.2 2.3.3"
+            PHP_VERSION: "7.2"
 
     steps:
     - uses: actions/checkout@v1
