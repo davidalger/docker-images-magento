@@ -47,7 +47,7 @@ jobs:
 
     - name: Build artifact
       run: |
-        if [ "{{ github.event }}" == "push" ];
+        if [ "${{ github.event }}" == "push" ];
           then ./scripts/build.sh --push
           else ./scripts/build.sh
         fi
@@ -73,7 +73,7 @@ jobs:
           docker commit mariadb docker.io/davidalger/magento:${{ matrix.major_version }}-mariadb${suffix}
           docker start mariadb && sleep 10
 
-          if [ "{{ github.event }}" == "push" ]; then
+          if [ "${{ github.event }}" == "push" ]; then
             docker image push docker.io/davidalger/magento:${{ matrix.major_version }}-mariadb${suffix}
           fi
         done
