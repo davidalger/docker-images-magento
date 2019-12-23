@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Magento ${{ matrix.MAJOR_VERSION }}
+    name: Magento ${{ matrix.MAJOR_VERSION }} (${{ matrix.MAGENTO_EDITION }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -22,10 +22,14 @@ jobs:
           - MAJOR_VERSION: "2.2"
             BUILD_VERSIONS: "2.2.x"
             PHP_VERSION: "7.2"
+            MAGENTO_EDITION: "community"
+            IMAGE_NAME: "docker.io/davidalger/magento"
 
           - MAJOR_VERSION: "2.3"
             BUILD_VERSIONS: "2.3.x"
             PHP_VERSION: "7.3"
+            MAGENTO_EDITION: "community"
+            IMAGE_NAME: "docker.io/davidalger/magento"
 
     steps:
     - uses: actions/checkout@v1
@@ -36,3 +40,6 @@ jobs:
         PHP_VERSION: ${{ matrix.PHP_VERSION }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_REGISTRY: docker.io
+        MAGENTO_EDITION: ${{ matrix.MAGENTO_EDITION }}
+        IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
