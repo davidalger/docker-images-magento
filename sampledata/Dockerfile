@@ -20,14 +20,15 @@ RUN mkdir -p var/composer_home \
     && bin/magento sampledata:deploy \
     && rm -rf var/composer_home
 
-## Install CSS fixtures normally placed during setup:install
-RUN find vendor/magento -type f -path '*/module-*/fixtures/*' -name styles.css \
-        | xargs -r cat >> pub/media/styles.css
-
 COPY config.php app/etc/config.php
 RUN bin/magento module:enable --all \
     && bin/magento setup:di:compile \
     && bin/magento setup:static-content:deploy -f -j $(nproc)
+
+## Requires aliased mariadb container on build network; see build.sh for details
+RUN bin/magento setup:install --cleanup-database \
+        --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento \
+    && rm -f app/etc/env.php
 
 FROM davidalger/php:${PHP_VERSION}-fpm
 COPY php.d/*.ini /etc/php.d/

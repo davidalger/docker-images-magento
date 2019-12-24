@@ -57,18 +57,51 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
 
     export COMPOSER_AUTH PHP_VERSION MAGENTO_VERSION MAGENTO_EDITION
     printf "\e[01;31m==> building ${IMAGE_TAGS[*]}\033[0m\n"
-    docker build "${IMAGE_TAGS[@]}" \
+
+    ## Create isolated network so build can connect to database for install
+    NETWORK_NAME="build_$(openssl rand -base64 32 | sed 's/[^a-z0-9]//g' | colrm 13)"
+    docker network create "${NETWORK_NAME}"
+
+    ## Start mariadb container allowing build to generate database artifact
+    MARIADB_NAME="mariadb_$(openssl rand -base64 32 | sed 's/[^a-z0-9]//g' | colrm 13)"
+    docker run --rm -d \
+      --name "${MARIADB_NAME}" \
+      --network "${NETWORK_NAME}" \
+      --network-alias mariadb \
+      -e MYSQL_DATABASE=magento \
+      -e MYSQL_USER=magento \
+      -e MYSQL_PASSWORD=magento \
+      -e MYSQL_RANDOM_ROOT_PASSWORD=true \
+      mariadb:10.3
+
+    ## Initiate the Dockerfile build
+    docker build "${IMAGE_TAGS[@]}" --network "${NETWORK_NAME}" \
         --build-arg COMPOSER_AUTH --build-arg PHP_VERSION \
         --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
         -f "${Dockerfile}" "${BASE_DIR}/context"
 
-    for tag in "${IMAGE_TAGS[@]}"; do
-      if [[ "${tag}" = "-t" ]]; then
+    ## Dump generated database to artifact for imaged container to pre-load on startup
+    docker exec "${MARIADB_NAME}" bash -c 'mysqldump -umagento -pmagento magento \
+      | gzip -c > /docker-entrypoint-initdb.d/artifact.sql.gz'
+
+    ## Commit and push images to regsistry
+    for IMAGE_TAG in "${IMAGE_TAGS[@]}"; do
+      if [[ "${IMAGE_TAG}" = "-t" ]]; then
         continue
       fi
+
+      MARIADB_TAG="$(echo "${IMAGE_TAG}" | sed 's/'"${IMAGE_SUFFIX}"'$/-mariadb&/')"
+      docker commit "${MARIADB_NAME}" "${MARIADB_TAG}"
+      echo "Successfully tagged ${MARIADB_TAG}"
+
       if [[ ${PUSH_FLAG} ]]; then
-        docker push "${tag}"
+        docker image push "${IMAGE_TAG}"
+        docker image push "${MARIADB_TAG}"
       fi
     done
+
+    ## Cleanup containers and networks started for build process
+    docker kill "${MARIADB_NAME}"
+    docker network rm "${NETWORK_NAME}"
   done
 done
