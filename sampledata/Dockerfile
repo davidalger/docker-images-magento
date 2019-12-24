@@ -8,15 +8,21 @@ ARG MAGENTO_EDITION
 COPY composer-cache /root/.composer/cache
 COPY php.d/*.ini /etc/php.d/
 
+WORKDIR /var/www/html
+
 RUN composer global require hirak/prestissimo \
     && composer create-project --no-interaction --repository=https://repo.magento.com/ \
         magento/project-${MAGENTO_EDITION}-edition /var/www/html ${MAGENTO_VERSION}
 
-WORKDIR /var/www/html
+## Install sampledata modules
 RUN mkdir -p var/composer_home \
     && ln -s /root/.composer/cache var/composer_home/cache \
     && bin/magento sampledata:deploy \
     && rm -rf var/composer_home
+
+## Install CSS fixtures normally placed during setup:install
+RUN find vendor/magento -type f -path '*/module-*/fixtures/*' -name styles.css \
+        | xargs -r cat >> pub/media/styles.css
 
 COPY config.php app/etc/config.php
 RUN bin/magento module:enable --all \
