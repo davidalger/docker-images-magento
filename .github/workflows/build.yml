@@ -64,7 +64,7 @@ jobs:
             php bin/magento setup:install \
               --cleanup-database --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento
 
-          docker exec -it mariadb bash -c 'mysqldump -umagento -pmagento magento \
+          docker exec mariadb bash -c 'mysqldump -umagento -pmagento magento \
             | gzip -c > /docker-entrypoint-initdb.d/artifact.sql.gz'
 
           docker commit mariadb docker.io/davidalger/magento:${{ matrix.major_version }}-mariadb${suffix}
