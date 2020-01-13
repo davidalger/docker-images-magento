@@ -22,8 +22,16 @@ fi
 
 ## login to docker hub as needed
 if [[ ${PUSH_FLAG} ]]; then
-  [ -t 1 ] && docker login \
-    || echo "${DOCKER_PASSWORD:-}" | docker login -u "${DOCKER_USERNAME:-}" --password-stdin ${DOCKER_REGISTRY:-}
+  if [[ ${DOCKER_USERNAME:-} ]]; then
+    echo "Attempting non-interactive docker login (via provided credentials)"
+    echo "${DOCKER_PASSWORD:-}" | docker login -u "${DOCKER_USERNAME:-}" --password-stdin ${DOCKER_REGISTRY:-}
+  elif [[ ${AWS_ACCESS_KEY_ID:-} ]] || [[ ${AWS_PROFILE:-} ]]; then
+    echo "Attempting non-interactive docker login (via aws ecr get-login)"
+    $(aws ecr get-login --no-include-email --region us-east-1)
+  elif [[ -t 1 ]]; then
+    echo "Attempting interactive docker login (tty)"
+    docker login
+  fi
 fi
 
 ## space separated list of versions to build
