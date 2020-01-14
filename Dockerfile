@@ -2,6 +2,7 @@ ARG PHP_VERSION=
 FROM davidalger/php:${PHP_VERSION}-fpm as build
 
 ARG COMPOSER_AUTH
+ARG COMPOSER_PKGS
 ARG MAGENTO_VERSION
 ARG MAGENTO_EDITION
 
@@ -13,6 +14,10 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo \
     && composer create-project --no-interaction --repository=https://repo.magento.com/ \
         magento/project-${MAGENTO_EDITION}-edition /var/www/html ${MAGENTO_VERSION}
+
+RUN if [[ ${COMPOSER_PKGS} ]]; \
+        then composer require --no-interaction ${COMPOSER_PKGS}; \
+    fi
 
 COPY config.php app/etc/config.php
 RUN bin/magento module:enable --all \

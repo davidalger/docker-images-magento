@@ -39,6 +39,11 @@ PHP_VERSION="${PHP_VERSION:-7.3}"
 BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.x}"
 LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $NF}')"
 MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
+IMAGE_VARIANT="${IMAGE_VARIANT:-}"
+
+if [[ ${IMAGE_VARIANT} ]]; then
+  IMAGE_VARIANT="-${IMAGE_VARIANT}"
+fi
 
 ## iterate over and build each Dockerfile
 for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
@@ -56,14 +61,14 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
     fi
 
     if [[ ! ${MAGENTO_VERSION} =~ x$ ]]; then
-      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:${MAGENTO_VERSION}${IMAGE_SUFFIX}")
+      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:${MAGENTO_VERSION}${IMAGE_VARIANT}${IMAGE_SUFFIX}")
     fi
 
     if [[ ${LATEST_VERSION} = ${MAGENTO_VERSION} ]]; then
-      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:$(echo ${MAGENTO_VERSION} | cut -d. -f1-2)${IMAGE_SUFFIX}")
+      IMAGE_TAGS+=("-t" "${IMAGE_NAME}:$(echo ${MAGENTO_VERSION} | cut -d. -f1-2)${IMAGE_VARIANT}${IMAGE_SUFFIX}")
     fi
 
-    export COMPOSER_AUTH PHP_VERSION MAGENTO_VERSION MAGENTO_EDITION
+    export COMPOSER_AUTH COMPOSER_PKGS PHP_VERSION MAGENTO_VERSION MAGENTO_EDITION
     printf "\e[01;31m==> building ${IMAGE_TAGS[*]}\033[0m\n"
 
     ## Create isolated network so build can connect to database for install
@@ -84,7 +89,7 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
 
     ## Initiate the Dockerfile build
     docker build "${IMAGE_TAGS[@]}" --network "${NETWORK_NAME}" \
-        --build-arg COMPOSER_AUTH --build-arg PHP_VERSION \
+        --build-arg COMPOSER_AUTH --build-arg COMPOSER_PKGS --build-arg PHP_VERSION \
         --build-arg MAGENTO_VERSION --build-arg MAGENTO_EDITION \
         -f "${Dockerfile}" "${BASE_DIR}/context"
 
@@ -98,7 +103,7 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
         continue
       fi
 
-      MARIADB_TAG="$(echo "${IMAGE_TAG}" | sed 's/'"${IMAGE_SUFFIX}"'$/-mariadb&/')"
+      MARIADB_TAG="$(echo "${IMAGE_TAG}" | sed 's/'"${IMAGE_VARIANT}${IMAGE_SUFFIX}"'$/-mariadb&/')"
       docker commit "${MARIADB_NAME}" "${MARIADB_TAG}"
       echo "Successfully tagged ${MARIADB_TAG}"
 
