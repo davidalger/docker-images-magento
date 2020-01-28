@@ -33,9 +33,6 @@ RUN bin/magento module:enable --all \
 RUN bin/magento setup:install --cleanup-database \
         --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento
 
-## Can only run this when there are images present (i.e. sampledata is installed)
-RUN bin/magento catalog:images:resize
-
 ## Clean all the cruft out before copying files into final image
 RUN find var app/etc/env.php -maxdepth 1 '!' -name var '!' -name .htaccess -exec rm -rvf {} +
 
