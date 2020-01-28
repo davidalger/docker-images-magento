@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Magento ${{ matrix.MAJOR_VERSION }} (${{ matrix.MAGENTO_EDITION }})
+    name: Magento ${{ matrix.MAJOR_VERSION }} (${{ matrix.BUILD_VARIANT }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -23,6 +23,7 @@ jobs:
             PHP_VERSION: "7.3"
             MAGENTO_EDITION: "community"
             IMAGE_NAME: "docker.io/davidalger/magento"
+            BUILD_VARIANT: "Community"
 
     steps:
     - uses: actions/checkout@v1
