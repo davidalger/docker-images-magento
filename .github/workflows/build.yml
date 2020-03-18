@@ -3,6 +3,9 @@ on:
   schedule:
   - cron: "0 6 * * 1"   # 6 AM UTC on Monday
   push:
+    paths-ignore:
+    - LICENSE
+    - README.md
     branches:
     - master
 
