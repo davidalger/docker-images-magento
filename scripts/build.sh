@@ -87,6 +87,19 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
       -e MYSQL_RANDOM_ROOT_PASSWORD=true \
       mariadb:10.3
 
+    ## Start elasticsearch container so that Magento 2.4 build will install
+    if [[ ${MAGENTO_VERSION} =~ ^2\.[4-9] ]]; then
+      ELASTICSEARCH_NAME="elasticsearch_$(openssl rand -base64 32 | sed 's/[^a-z0-9]//g' | colrm 13)"
+      docker run --rm -d \
+        --name "${ELASTICSEARCH_NAME}" \
+        --network "${NETWORK_NAME}" \
+        --network-alias elasticsearch \
+        -e discovery.type=single-node \
+        -e xpack.security.enabled=false \
+        -e "ES_JAVA_OPTS=-Xms64m -Xmx512m" \
+        docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+    fi
+
     ## Initiate the Dockerfile build
     docker build "${IMAGE_TAGS[@]}" --network "${NETWORK_NAME}" \
         --build-arg COMPOSER_AUTH --build-arg COMPOSER_PKGS --build-arg PHP_VERSION \
@@ -115,6 +128,9 @@ for Dockerfile in $(find . -type f -name Dockerfile | sort -n); do
 
     ## Cleanup containers and networks started for build process
     docker kill "${MARIADB_NAME}"
+    if [[ ${MAGENTO_VERSION} =~ ^2\.[4-9] ]]; then
+      docker kill "${ELASTICSEARCH_NAME}"
+    fi
     docker network rm "${NETWORK_NAME}"
   done
 done

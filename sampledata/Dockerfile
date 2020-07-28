@@ -29,9 +29,15 @@ RUN bin/magento module:enable --all \
     && bin/magento setup:di:compile \
     && bin/magento setup:static-content:deploy -f -j $(nproc)
 
-## Requires aliased mariadb container on build network; see build.sh for details
-RUN bin/magento setup:install --cleanup-database \
-        --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento
+## Requires mariadb and elasticsearch container on build network; see build.sh for details
+RUN if [[ ${MAGENTO_VERSION} =~ ^2\.[4-9] ]]; then \
+      echo bin/magento setup:install --cleanup-database \
+        --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento \
+        --search-engine=elasticsearch7 --elasticsearch-host=elasticsearch; \
+    else \
+      echo bin/magento setup:install --cleanup-database \
+        --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento; \
+    fi
 
 ## Clean all the cruft out before copying files into final image
 RUN find var app/etc/env.php -maxdepth 1 '!' -name var '!' -name .htaccess -exec rm -rvf {} +
