@@ -17,10 +17,18 @@ jobs:
       fail-fast: false
       matrix:
         MAJOR_VERSION:
+          - "2.4"
           - "2.3"
         MAGENTO_EDITION:
           - "community"
         include:
+          - MAJOR_VERSION: "2.4"
+            BUILD_VERSIONS: "2.4.x"
+            PHP_VERSION: "7.4"
+            MAGENTO_EDITION: "community"
+            IMAGE_NAME: "docker.io/davidalger/magento"
+            BUILD_VARIANT: "Community"
+
           - MAJOR_VERSION: "2.3"
             BUILD_VERSIONS: "2.3.x"
             PHP_VERSION: "7.3"
