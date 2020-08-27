@@ -31,11 +31,11 @@ RUN bin/magento module:enable --all \
 
 ## Requires mariadb and elasticsearch container on build network; see build.sh for details
 RUN if [[ ${MAGENTO_VERSION} =~ ^2\.[4-9] ]]; then \
-      echo bin/magento setup:install --cleanup-database \
+      bin/magento setup:install --cleanup-database \
         --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento \
         --search-engine=elasticsearch7 --elasticsearch-host=elasticsearch; \
     else \
-      echo bin/magento setup:install --cleanup-database \
+      bin/magento setup:install --cleanup-database \
         --db-host=mariadb --db-name=magento --db-user=magento --db-password=magento; \
     fi
 
