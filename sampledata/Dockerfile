@@ -40,7 +40,7 @@ RUN if [[ ${MAGENTO_VERSION} =~ ^2\.[4-9] ]]; then \
     fi
 
 ## Clean all the cruft out before copying files into final image
-RUN find var app/etc/env.php -maxdepth 1 '!' -name var '!' -name .htaccess -exec rm -rvf {} +
+RUN find var app/etc/env.php -maxdepth 1 '!' -name var '!' -name .htaccess -exec rm -rf {} +
 
 FROM davidalger/php:${PHP_VERSION}-fpm
 COPY php.d/*.ini /etc/php.d/
