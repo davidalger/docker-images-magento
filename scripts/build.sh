@@ -35,8 +35,8 @@ if [[ ${PUSH_FLAG} ]]; then
 fi
 
 ## space separated list of versions to build
-PHP_VERSION="${PHP_VERSION:-7.3}"
-BUILD_VERSIONS="${BUILD_VERSIONS:-2.3.x}"
+PHP_VERSION="${PHP_VERSION:-7.4}"
+BUILD_VERSIONS="${BUILD_VERSIONS:-2.4.x}"
 LATEST_VERSION="$(echo ${BUILD_VERSIONS} | awk '{print $NF}')"
 MAGENTO_EDITION="${MAGENTO_EDITION:-community}"
 IMAGE_VARIANT="${IMAGE_VARIANT:-}"
