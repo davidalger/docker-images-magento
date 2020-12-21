@@ -44,4 +44,4 @@ RUN find var app/etc/env.php -maxdepth 1 '!' -name var '!' -name .htaccess -exec
 
 FROM davidalger/php:${PHP_VERSION}-fpm
 COPY php.d/*.ini /etc/php.d/
-COPY --from=build --chown=php-fpm:php-fpm /var/www/html /var/www/html
+COPY --from=build --chown=apache:apache /var/www/html /var/www/html
